@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Letterdle</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #121213;
+            color: #ffffff;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            flex-direction: column;
+        }
+        h1 {
+            font-size: 2em;
+            margin-top: 20px;
+        }
+        #game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 20px;
+        }
+        #board {
+            display: grid;
+            grid-template-columns: repeat(5, 60px);
+            grid-template-rows: repeat(6, 60px);
+            gap: 5px;
+            margin-bottom: 20px;
+            justify-content: center;
+        }
+        .letter-box {
+            width: 60px;
+            height: 60px;
+            border: 2px solid #3a3a3c;
+            font-size: 32px;
+            text-align: center;
+            line-height: 60px;
+            text-transform: uppercase;
+            font-weight: bold;
+            background-color: #121213;
+            color: white;
+        }
+        .correct { background-color: #538d4e; border-color: #538d4e; }
+        .present { background-color: #b59f3b; border-color: #b59f3b; }
+        .absent { background-color: #3a3a3c; border-color: #3a3a3c; }
+        #keyboard {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            gap: 5px;
+            width: 350px;
+            margin: auto;
+        }
+        .key {
+            padding: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            text-transform: uppercase;
+            background-color: #3a3a3c;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        #message {
+            margin-top: 10px;
+            font-size: 18px;
+        }
+        #next-game-btn {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 18px;
+            background-color: #3a3a3c;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        #giveup-btn {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 18px;
+            background-color: #a83232;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>Letterdle</h1>
+    <div id="game-container" style="display: none;">
+        <div id="board"></div>
+        <div id="keyboard"></div>
+        <p id="message"></p>
+        <button id="giveup-btn" onclick="giveUp()">Give Up</button>
+        <button id="next-game-btn" onclick="nextGame()" style="display: none;">Next Game</button>
+    </div>
+
+    <script>
+        const board = document.getElementById("board");
+        const keyboard = document.getElementById("keyboard");
+        const message = document.getElementById("message");
+        const gameContainer = document.getElementById("game-container");
+        const nextGameBtn = document.getElementById("next-game-btn");
+        const giveUpBtn = document.getElementById("giveup-btn");
+
+        let targetWord = "";
+        let attempts = [];
+        let currentRow = 0;
+        let currentGuess = "";
+        let gameOver = false;
+
+        // Simple 5-letter words
+        const simpleWords = ["apple", "house", "plant", "table", "chair", "stone", "water", "grape", "bread", "lights"];
+
+        function chooseWord() {
+            const randomIndex = Math.floor(Math.random() * simpleWords.length);
+            targetWord = simpleWords[randomIndex].toUpperCase();
+        }
+
+        function startGame() {
+            chooseWord();
+            gameContainer.style.display = "block";
+            createBoard();
+            createKeyboard();
+        }
+
+        function createBoard() {
+            board.innerHTML = "";
+            for (let i = 0; i < 6; i++) {
+                for (let j = 0; j < 5; j++) {
+                    let div = document.createElement("div");
+                    div.className = "letter-box";
+                    div.id = `box-${i}-${j}`;
+                    board.appendChild(div);
+                }
+            }
+        }
+
+        function createKeyboard() {
+            const keys = "QWERTYUIOPASDFGHJKLZXCVBNM".split("");
+            keys.forEach(letter => {
+                let btn = document.createElement("button");
+                btn.className = "key";
+                btn.textContent = letter;
+                btn.onclick = () => addLetter(letter);
+                keyboard.appendChild(btn);
+            });
+
+            let deleteBtn = document.createElement("button");
+            deleteBtn.className = "key";
+            deleteBtn.textContent = "⌫";
+            deleteBtn.onclick = deleteLetter;
+            keyboard.appendChild(deleteBtn);
+
+            let enterBtn = document.createElement("button");
+            enterBtn.className = "key";
+            enterBtn.textContent = "Enter";
+            enterBtn.onclick = submitGuess;
+            keyboard.appendChild(enterBtn);
+        }
+
+        function addLetter(letter) {
+            if (currentGuess.length < 5 && !gameOver) {
+                currentGuess += letter;
+                updateBoard();
+            }
+        }
+
+        function deleteLetter() {
+            if (currentGuess.length > 0 && !gameOver) {
+                currentGuess = currentGuess.slice(0, -1);
+                updateBoard();
+            }
+        }
+
+        async function isValidWord(word) {
+            let response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word.toLowerCase()}`);
+            return response.ok;
+        }
+
+        async function submitGuess() {
+            if (currentGuess.length !== 5 || !(await isValidWord(currentGuess))) {
+                message.textContent = "Invalid word!";
+                return;
+            }
+            message.textContent = "";
+            attempts.push(currentGuess);
+            updateBoard();
+
+            if (currentGuess === targetWord) {
+                message.textContent = "You Win!";
+                gameOver = true;
+                nextGameBtn.style.display = "block";
+                return;
+            }
+
+            if (attempts.length === 6) {
+                message.textContent = `Game Over! The word was ${targetWord}`;
+                gameOver = true;
+                nextGameBtn.style.display = "block";
+            }
+
+            currentGuess = "";
+            currentRow++;
+        }
+
+        function updateBoard() {
+            attempts.forEach((guess, rowIndex) => {
+                for (let i = 0; i < 5; i++) {
+                    let box = document.getElementById(`box-${rowIndex}-${i}`);
+                    box.textContent = guess[i];
+
+                    if (guess[i] === targetWord[i]) {
+                        box.classList.add("correct");
+                    } else if (targetWord.includes(guess[i])) {
+                        box.classList.add("present");
+                    } else {
+                        box.classList.add("absent");
+                    }
+                }
+            });
+
+            for (let i = 0; i < 5; i++) {
+                let box = document.getElementById(`box-${currentRow}-${i}`);
+                box.textContent = currentGuess[i] || "";
+            }
+        }
+
+        function nextGame() {
+            attempts = [];
+            currentRow = 0;
+            currentGuess = "";
+            message.textContent = "";
+            nextGameBtn.style.display = "none";
+            gameOver = false;
+            chooseWord();
+            createBoard();
+        }
+
+        function giveUp() {
+            gameOver = true;
+            message.textContent = `You gave up! The word was ${targetWord}`;
+            nextGameBtn.style.display = "block";
+            disableKeyboard();
+        }
+
+        function disableKeyboard() {
+            const keys = document.querySelectorAll(".key");
+            keys.forEach(key => {
+                key.disabled = true;
+            });
+        }
+
+        document.addEventListener("keydown", (event) => {
+            if (gameOver) return;
+            let key = event.key.toUpperCase();
+            if (key === "ENTER") {
+                submitGuess();
+            } else if (key === "BACKSPACE") {
+                deleteLetter();
+            } else if (/^[A-Z]$/.test(key)) {
+                addLetter(key);
+            }
+        });
+
+        startGame();
+    </script>
+</body>
+</html>
