@@ -20,6 +20,13 @@
         h1 {
             font-size: 2em;
             margin-top: 20px;
+            display: flex;
+            align-items: center;
+        }
+        h1 img {
+            width: 40px;  /* Adjust the size of the logo */
+            height: auto;
+            margin-left: 10px;  /* Space between the text and the logo */
         }
         #game-container {
             display: flex;
@@ -92,7 +99,10 @@
     </style>
 </head>
 <body>
-    <h1>Letterdle</h1>
+    <h1>
+        Letterdle
+        <img src="https://i.imgur.com/C4o0stA.png" alt="Letterdle Logo">
+    </h1>
     <div id="game-container" style="display: none;">
         <div id="board"></div>
         <div id="keyboard"></div>
