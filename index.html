@@ -9,7 +9,7 @@
             font-family: Arial, sans-serif;
             text-align: center;
             background-color: #121213;
-            color: #ffffff;
+            color: white;
             margin: 0;
             display: flex;
             justify-content: center;
@@ -17,21 +17,34 @@
             height: 100vh;
             flex-direction: column;
         }
-        h1 {
-            font-size: 2em;
-            margin-top: 20px;
-            display: flex;
-            align-items: center;
-        }
-        h1 img {
-            width: 40px;  /* Adjust the size of the logo */
-            height: auto;
-            margin-left: 10px;  /* Space between the text and the logo */
-        }
-        #game-container {
+        #description-page {
+            text-align: center;
+            padding: 20px;
+            background-color: #1a1a1b;
+            width: 100%;
+            height: 100vh;
             display: flex;
             flex-direction: column;
+            justify-content: center;
             align-items: center;
+        }
+        #next-button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 18px;
+            background-color: #3a3a3c;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        #game-container {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 20px;
+        }
+        h1 {
+            font-size: 2em;
             margin-top: 20px;
         }
         #board {
@@ -54,18 +67,19 @@
             background-color: #121213;
             color: white;
         }
-        .correct { background-color: #538d4e; border-color: #538d4e; }
-        .present { background-color: #b59f3b; border-color: #b59f3b; }
-        .absent { background-color: #3a3a3c; border-color: #3a3a3c; }
         #keyboard {
-            display: grid;
-            grid-template-columns: repeat(10, 1fr);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
             gap: 5px;
-            width: 350px;
-            margin: auto;
+        }
+        .keyboard-row {
+            display: flex;
+            justify-content: center;
+            gap: 5px;
         }
         .key {
-            padding: 10px;
+            padding: 10px 15px;
             font-size: 18px;
             font-weight: bold;
             text-transform: uppercase;
@@ -73,71 +87,83 @@
             color: white;
             border: none;
             cursor: pointer;
+            width: 40px;
+            text-align: center;
         }
         #message {
             margin-top: 10px;
             font-size: 18px;
         }
-        #next-game-btn {
+        #controls {
             margin-top: 20px;
+        }
+        #give-up, #next-game {
+            margin: 10px;
             padding: 10px 20px;
             font-size: 18px;
-            background-color: #3a3a3c;
+            background-color: #ff4747;
             color: white;
             border: none;
             cursor: pointer;
         }
-        #giveup-btn {
-            margin-top: 20px;
-            padding: 10px 20px;
-            font-size: 18px;
-            background-color: #a83232;
-            color: white;
-            border: none;
-            cursor: pointer;
+        #next-game {
+            background-color: #4caf50;
+            display: none; /* Hide next game button initially */
         }
     </style>
 </head>
 <body>
-    <h1>
-        Letterdle
-        <img src="https://i.imgur.com/C4o0stA.png" alt="Letterdle Logo">
-    </h1>
-    <div id="game-container" style="display: none;">
+    <div id="description-page">
+        <h2>How to Play</h2>
+        <p>Guess the 5-letter word in 6 tries. The tiles change color based on correctness:</p>
+        <ul style="text-align: left; max-width: 400px; margin: auto;">
+            <li><span style="color: #538d4e; font-weight: bold;">Green:</span> Correct letter in the correct spot.</li>
+            <li><span style="color: #b59f3b; font-weight: bold;">Yellow:</span> Correct letter in the wrong spot.</li>
+            <li><span style="color: #3a3a3c; font-weight: bold;">Gray:</span> Letter is not in the word.</li>
+        </ul>
+        <button id="next-button">Next</button>
+    </div>
+
+    <div id="game-container">
+        <h1>Letterdle</h1>
         <div id="board"></div>
         <div id="keyboard"></div>
         <p id="message"></p>
-        <button id="giveup-btn" onclick="giveUp()">Give Up</button>
-        <button id="next-game-btn" onclick="nextGame()" style="display: none;">Next Game</button>
+        <div id="controls">
+            <button id="give-up">Give Up</button>
+            <button id="next-game">Next Game</button>
+        </div>
     </div>
 
     <script>
+        document.getElementById("next-button").addEventListener("click", function () {
+            document.getElementById("description-page").style.display = "none";
+            document.getElementById("game-container").style.display = "block";
+            startGame();
+        });
+
         const board = document.getElementById("board");
         const keyboard = document.getElementById("keyboard");
         const message = document.getElementById("message");
-        const gameContainer = document.getElementById("game-container");
-        const nextGameBtn = document.getElementById("next-game-btn");
-        const giveUpBtn = document.getElementById("giveup-btn");
 
         let targetWord = "";
-        let attempts = [];
-        let currentRow = 0;
         let currentGuess = "";
-        let gameOver = false;
+        let attempts = 0;
 
-        // Simple 5-letter words
-        const simpleWords = ["apple", "house", "plant", "table", "chair", "stone", "water", "grape", "bread", "lights"];
+        const words = ["apple", "house", "plant", "table", "chair"];
 
         function chooseWord() {
-            const randomIndex = Math.floor(Math.random() * simpleWords.length);
-            targetWord = simpleWords[randomIndex].toUpperCase();
+            targetWord = words[Math.floor(Math.random() * words.length)].toUpperCase();
         }
 
         function startGame() {
             chooseWord();
-            gameContainer.style.display = "block";
             createBoard();
             createKeyboard();
+            message.textContent = "";
+            currentGuess = "";
+            attempts = 0;
+            document.getElementById("next-game").style.display = "none"; // Hide "Next Game" at the start
         }
 
         function createBoard() {
@@ -153,130 +179,105 @@
         }
 
         function createKeyboard() {
-            const keys = "QWERTYUIOPASDFGHJKLZXCVBNM".split("");
-            keys.forEach(letter => {
-                let btn = document.createElement("button");
-                btn.className = "key";
-                btn.textContent = letter;
-                btn.onclick = () => addLetter(letter);
-                keyboard.appendChild(btn);
+            keyboard.innerHTML = "";
+            const rows = ["QWERTYUIOP", "ASDFGHJKL", "ZXCVBNM"];
+            rows.forEach(row => {
+                let div = document.createElement("div");
+                div.className = "keyboard-row";
+                row.split("").forEach(letter => {
+                    let btn = document.createElement("button");
+                    btn.className = "key";
+                    btn.textContent = letter;
+                    btn.onclick = () => handleInput(letter);
+                    div.appendChild(btn);
+                });
+                keyboard.appendChild(div);
             });
 
-            let deleteBtn = document.createElement("button");
-            deleteBtn.className = "key";
-            deleteBtn.textContent = "⌫";
-            deleteBtn.onclick = deleteLetter;
-            keyboard.appendChild(deleteBtn);
+            let controls = document.createElement("div");
+            controls.className = "keyboard-row";
+
+            let backspaceBtn = document.createElement("button");
+            backspaceBtn.className = "key";
+            backspaceBtn.textContent = "⌫";
+            backspaceBtn.onclick = deleteLetter;
+            controls.appendChild(backspaceBtn);
 
             let enterBtn = document.createElement("button");
             enterBtn.className = "key";
             enterBtn.textContent = "Enter";
             enterBtn.onclick = submitGuess;
-            keyboard.appendChild(enterBtn);
+            controls.appendChild(enterBtn);
+
+            keyboard.appendChild(controls);
         }
 
-        function addLetter(letter) {
-            if (currentGuess.length < 5 && !gameOver) {
+        function handleInput(letter) {
+            if (currentGuess.length < 5) {
                 currentGuess += letter;
                 updateBoard();
             }
         }
 
         function deleteLetter() {
-            if (currentGuess.length > 0 && !gameOver) {
+            if (currentGuess.length > 0) {
                 currentGuess = currentGuess.slice(0, -1);
                 updateBoard();
             }
         }
 
-        async function isValidWord(word) {
-            let response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word.toLowerCase()}`);
-            return response.ok;
+        function updateBoard() {
+            for (let i = 0; i < currentGuess.length; i++) {
+                let box = document.getElementById(`box-${attempts}-${i}`);
+                box.textContent = currentGuess[i];
+            }
+
+            // Clear remaining boxes if less than 5 characters
+            for (let i = currentGuess.length; i < 5; i++) {
+                let box = document.getElementById(`box-${attempts}-${i}`);
+                box.textContent = "";
+            }
         }
 
-        async function submitGuess() {
-            if (currentGuess.length !== 5 || !(await isValidWord(currentGuess))) {
-                message.textContent = "Invalid word!";
-                return;
+        function submitGuess() {
+            if (currentGuess.length !== 5) return;
+
+            for (let i = 0; i < 5; i++) {
+                let box = document.getElementById(`box-${attempts}-${i}`);
+                box.textContent = currentGuess[i];
+
+                if (currentGuess[i] === targetWord[i]) {
+                    box.style.backgroundColor = "#538d4e"; // Correct
+                } else if (targetWord.includes(currentGuess[i])) {
+                    box.style.backgroundColor = "#b59f3b"; // Present
+                } else {
+                    box.style.backgroundColor = "#3a3a3c"; // Absent
+                }
             }
-            message.textContent = "";
-            attempts.push(currentGuess);
-            updateBoard();
 
             if (currentGuess === targetWord) {
                 message.textContent = "You Win!";
-                gameOver = true;
-                nextGameBtn.style.display = "block";
-                return;
-            }
-
-            if (attempts.length === 6) {
+                document.getElementById("next-game").style.display = "block"; // Show next game button on win
+            } else if (attempts === 5) {
                 message.textContent = `Game Over! The word was ${targetWord}`;
-                gameOver = true;
-                nextGameBtn.style.display = "block";
+                document.getElementById("next-game").style.display = "block"; // Show next game button on game over
             }
 
             currentGuess = "";
-            currentRow++;
+            attempts++;
         }
 
-        function updateBoard() {
-            attempts.forEach((guess, rowIndex) => {
-                for (let i = 0; i < 5; i++) {
-                    let box = document.getElementById(`box-${rowIndex}-${i}`);
-                    box.textContent = guess[i];
+        document.getElementById("give-up").addEventListener("click", () => {
+            message.textContent = `Why would you give up! The word was ${targetWord}`;
+            document.getElementById("next-game").style.display = "block"; // Show next game button when giving up
+        });
 
-                    if (guess[i] === targetWord[i]) {
-                        box.classList.add("correct");
-                    } else if (targetWord.includes(guess[i])) {
-                        box.classList.add("present");
-                    } else {
-                        box.classList.add("absent");
-                    }
-                }
-            });
-
-            for (let i = 0; i < 5; i++) {
-                let box = document.getElementById(`box-${currentRow}-${i}`);
-                box.textContent = currentGuess[i] || "";
-            }
-        }
-
-        function nextGame() {
-            attempts = [];
-            currentRow = 0;
-            currentGuess = "";
-            message.textContent = "";
-            nextGameBtn.style.display = "none";
-            gameOver = false;
-            chooseWord();
-            createBoard();
-        }
-
-        function giveUp() {
-            gameOver = true;
-            message.textContent = `You gave up! The word was ${targetWord}`;
-            nextGameBtn.style.display = "block";
-            disableKeyboard();
-        }
-
-        function disableKeyboard() {
-            const keys = document.querySelectorAll(".key");
-            keys.forEach(key => {
-                key.disabled = true;
-            });
-        }
+        document.getElementById("next-game").addEventListener("click", startGame);
 
         document.addEventListener("keydown", (event) => {
-            if (gameOver) return;
-            let key = event.key.toUpperCase();
-            if (key === "ENTER") {
-                submitGuess();
-            } else if (key === "BACKSPACE") {
-                deleteLetter();
-            } else if (/^[A-Z]$/.test(key)) {
-                addLetter(key);
-            }
+            if (/^[a-zA-Z]$/.test(event.key)) handleInput(event.key.toUpperCase());
+            else if (event.key === "Backspace") deleteLetter();
+            else if (event.key === "Enter") submitGuess();
         });
 
         startGame();
