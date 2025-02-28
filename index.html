@@ -110,6 +110,31 @@
             background-color: #4caf50;
             display: none;
         }
+
+        /* Updated CSS for difficulty buttons */
+        #difficulty-page .level-button {
+            margin: 10px;
+            padding: 20px 40px; /* Increased padding for larger buttons */
+            font-size: 24px; /* Larger font size */
+            background-color: #3a3a3c;
+            color: white;
+            border: none;
+            cursor: pointer;
+            width: 100%; /* Make buttons take up the full width */
+            max-width: 300px; /* Limit the maximum width */
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        #difficulty-page {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr); /* Use 3 columns for better horizontal spacing */
+            gap: 40px; /* Increase space between buttons */
+            justify-items: center; /* Center the buttons in each grid cell */
+            align-items: center;
+            padding: 20px;
+        }
     </style>
 </head>
 <body>
