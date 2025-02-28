@@ -183,6 +183,8 @@
         const wordsLevel4 = ["space", "stars", "teeth"];
         const wordsLevel5 = ["later", "tails", "alloy"];
 
+        let gameOver = false; // Flag to track game state
+
         document.getElementById("next-button").addEventListener("click", function () {
             document.getElementById("description-page").style.display = "none";
             document.getElementById("difficulty-page").style.display = "block";
@@ -205,7 +207,7 @@
         const keyboard = document.getElementById("keyboard");
         const message = document.getElementById("message");
         const wordsList = [wordsLevel1, wordsLevel2, wordsLevel3, wordsLevel4, wordsLevel5];
-        
+
         let targetWord = "";
         let currentGuess = "";
         let attempts = 0;
@@ -222,6 +224,7 @@
             message.textContent = "";
             currentGuess = "";
             attempts = 0;
+            gameOver = false; // Reset game over flag
             document.getElementById("next-game").style.display = "none";
             document.getElementById("game-container").style.display = "flex";
         }
@@ -273,14 +276,14 @@
         }
 
         function handleInput(letter) {
-            if (currentGuess.length < 5) {
+            if (currentGuess.length < 5 && !gameOver) { // Disable input after game ends
                 currentGuess += letter;
                 updateBoard();
             }
         }
 
         function deleteLetter() {
-            if (currentGuess.length > 0) {
+            if (currentGuess.length > 0 && !gameOver) { // Disable delete after game ends
                 currentGuess = currentGuess.slice(0, -1);
                 updateBoard();
             }
@@ -300,6 +303,7 @@
         }
 
         function submitGuess() {
+            if (gameOver) return; // Prevent submitting after game ends
             if (currentGuess.length !== 5) return;
 
             for (let i = 0; i < 5; i++) {
@@ -317,9 +321,11 @@
 
             if (currentGuess === targetWord) {
                 message.textContent = "You Win!";
+                gameOver = true; // Set game over flag
                 document.getElementById("next-game").style.display = "block";
             } else if (attempts === 5) {
                 message.textContent = `Game Over! The word was ${targetWord}`;
+                gameOver = true; // Set game over flag
                 document.getElementById("next-game").style.display = "block";
             }
 
@@ -329,12 +335,14 @@
 
         document.getElementById("give-up").addEventListener("click", () => {
             message.textContent = `Why would you give up! The word was ${targetWord}`;
+            gameOver = true; // Set game over flag
             document.getElementById("next-game").style.display = "block";
         });
 
         document.getElementById("next-game").addEventListener("click", startGame);
 
         document.addEventListener("keydown", (event) => {
+            if (gameOver) return; // Prevent typing after game ends
             if (/^[a-zA-Z]$/.test(event.key)) handleInput(event.key.toUpperCase());
             else if (event.key === "Backspace") deleteLetter();
             else if (event.key === "Enter") submitGuess();
